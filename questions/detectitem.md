@@ -56,28 +56,10 @@ The correct check in the `SelectedItem` slot would look something like this:
 *If you are not sure what data structure an item has, use `/data get` to get the correct data.*
 
 ## 1.20.5 and above
- 
-### Target selector
-
-In 1.20.5 you can check an item using the NBT data check in the [target selector](https://minecraft.wiki/w/Target_selectors#Selecting_targets_by_nbt), however now can use [`execute if items`](https://minecraft.wiki/w/Commands/execute#(if|unless)_items) to flexibly detect items and can now use the [predicate](https://minecraft.wiki/w/Predicate) not only for equipment, but also for any slot and now even without using a datapack.
-
-    # Any slot
-    @a[nbt={Inventory:[{id:"minecraft:stick",components:{"minecraft:custom_data":{awesome_stick:true}}}]}]
-    @a[nbt={Inventory:[{id:"minecraft:stick",components:{"minecraft:custom_name":'"Awesome Stick"'}}]}]
-    
-    # Specific slot
-    @a[nbt={Inventory:[{Slot:0b,id:"minecraft:stick",components:{"minecraft:custom_data":{awesome_stick:true}}}]}]
-    @a[nbt={Inventory:[{Slot:0b,id:"minecraft:stick",components:{"minecraft:custom_name":'"Awesome Stick"'}}]}]
-    
-    # Mainhand
-    @a[nbt={SelectedItem:{id:"minecraft:stick",components:{"minecraft:custom_data":{awesome_stick:true}}}}]
-    @a[nbt={SelectedItem:{id:"minecraft:stick",components:{"minecraft:custom_name":'"Awesome Stick"'}}}]
-
-**Note:** The component `“minecraft:custom_data”` is escaped with parentheses because it contains the special character colon. And although you can omit `minecraft:` in /give and other commands, when checking NBT data in the target selector you should always specify the full format, which also includes the [namespace](https://minecraft.wiki/w/Resource_location#Namespaces).
 
 ### execute if items
 
-The syntax looks like this [\[wiki\]](https://minecraft.wiki/w/Commands/execute#(if|unless)_items):
+The syntax looks like this [\[wiki\]](https://minecraft.wiki/w/Commands/execute#(if%7Cunless)_items):
 
     if/unless items block <pos> <slots> <item_predicate>
     if/unless items entity <entities> <slots> <item_predicate>
@@ -85,6 +67,12 @@ The syntax looks like this [\[wiki\]](https://minecraft.wiki/w/Commands/execute#
 `<slots>` - a specific [slot](https://minecraft.wiki/w/Slot) (`hotbar.3`) or a range of slots (`hotbar.*`). *Ranges as in `distance=1..5` are not allowed.*
 
 `<item_predicate>` - specific item (`minecraft:yellow_wool`), item tag (`#minecraft:banners`) or any item (`*`). Checking a components or item sub-predicate is also supported.
+
+> [!IMPORTANT]
+>The component check (`=`) checks the exact match of the component specified in the check and any difference from the specified one fails the check, so it is recommended to use the exact check only if the item sub-predicate (`~`) check is not available for this component. So, for example, if you want to check the `minecraft:can_break` component, then only the component check is available here, so you cannot find any item that, for example, can break a stone, but you always need to specify the entire component.
+
+> [!TIP]
+>So always check the `minecraft:custom_data` component as an item sub-predicate check (`~`) instead of the exact component check (`=`): `*[custom_data~{some_data:true}]`
 
 An example for checking an item in almost any player slot:
 
@@ -98,18 +86,18 @@ You can also check multiple items by checking the item tag, for example, if the 
 
 Or you can omit the item id check and check only the components. There are two modes for checking components - exact compliance with the specified condition (`=`) or checking the item as a sub-predicate (`~`).
 
-The component check (`=`) checks the exact match of the component specified in the check and any difference from the specified one fails the check, so it is recommended to use the exact check only if the item sub-predicate (`~`) check is not available for this component. So, for example, if for some reason you want to check the `minecraft:can_break` component, then only the predicate check is available here, so you cannot find any item that, for example, can break a stone, but you always need to specify the entire component.
-
-*Therefore, in this article, all `custom_data` component checks are used as item sub-predicate (`~`).*
-
 In this example, any item in the hotbar with the unbreaking enchantment is detected, but if the item has any other enchantment, or enchantment level, then the check will fail for that item:
 
     execute as @a if items entity @s hotbar.* *[minecraft:enchantments={levels:{"minecraft:unbreaking":1}}]
 
 But if you want this to work if the item has a different enchantment, or enchantment level, you need to use the item sub-predicate (~) for this. Here the syntax is the same as checking item data in a predicate:
 
-    execute as @a if items entity @s hotbar.* *[minecraft:enchantments~[{"enchantment":"minecraft:unbreaking"}]]
+    execute as @a if items entity @s hotbar.* *[minecraft:enchantments~[{enchantment:"minecraft:unbreaking"}]]
     execute as @a if items entity @s hotbar.* *[minecraft:enchantments~[{enchantment:"minecraft:unbreaking",levels:{min:1,max:3}}]]
+
+In version 1.21, the iem sub-predicate for `minecraft:enchatments` component will now be `enchantments` instead of `enchantment` and now supports the enchantment tag:
+
+    execute as @a if items entity @s hotbar.* *[minecraft:enchantments~[{enchantments:"#minecraft:exclusive_set/mining"}]]
 
 Item sub-predicate also allows you to detect an item with damage not with a specific value, but with a range or remaining durability:
 
@@ -140,11 +128,34 @@ To check for an item inside an item_frame, projectile or an item on the ground, 
 
     execute as @e[type=item] if items entity @s contents minecraft:stick[minecraft:custom_data~{awesome_stick:true}]
 
+### Target selector
+
+In 1.20.5 you can check an item using the NBT data check in the [target selector](https://minecraft.wiki/w/Target_selectors#Selecting_targets_by_nbt), however now can use [`execute if items`](https://minecraft.wiki/w/Commands/execute#(if%7Cunless)_items) to flexibly detect items and can now use the [predicate](https://minecraft.wiki/w/Predicate) not only for equipment, but also for any slot and now even without using a datapack.
+
+    # Any slot
+    @a[nbt={Inventory:[{id:"minecraft:stick",components:{"minecraft:custom_data":{awesome_stick:true}}}]}]
+    @a[nbt={Inventory:[{id:"minecraft:stick",components:{"minecraft:custom_name":'"Awesome Stick"'}}]}]
+    
+    # Specific slot
+    @a[nbt={Inventory:[{Slot:0b,id:"minecraft:stick",components:{"minecraft:custom_data":{awesome_stick:true}}}]}]
+    @a[nbt={Inventory:[{Slot:0b,id:"minecraft:stick",components:{"minecraft:custom_name":'"Awesome Stick"'}}]}]
+    
+    # Mainhand
+    @a[nbt={SelectedItem:{id:"minecraft:stick",components:{"minecraft:custom_data":{awesome_stick:true}}}}]
+    @a[nbt={SelectedItem:{id:"minecraft:stick",components:{"minecraft:custom_name":'"Awesome Stick"'}}}]
+
+**Note:** The component `"minecraft:custom_data"` is escaped with parentheses because it contains the special character colon. And although you can omit `minecraft:` in /give and other commands, when checking NBT data in the target selector you should always specify the full format, which also includes the [namespace](https://minecraft.wiki/w/Resource_location#Namespaces).
+
 ### Predicate
 
 When using predicates in a datapack, you can now check not only equipment slots, but any slot. Here, just like when using if items, you can check for an exact match of components or use item sub-predicate for more flexible item detection. Also, "items" now accepts one item, one item tag (separate "tag" has been removed), or a list of items.
 
-This is an example of updating a predicate to detect an item with a custom tag:
+> [!IMPORTANT]
+>Always check the `minecraft:custom_data` component as an item sub-predicate check instead of the exact component check.
+
+If you are check `custom_data` as an exact component, then you must specify the data in that component as a JSON object (only in versions 1.20.5 - 1.20.6), but not as a string (available since 1.21), so there may be problems due to for implicit conversion. And also any other data, except for the ones being checked, in this component will fail the check of this predicate.
+
+This is an example of updating a predicate to detect an item with a `custom_data` using item sub-predicate check:
 
 ```
 {
@@ -158,7 +169,7 @@ This is an example of updating a predicate to detect an item with a custom tag:
           "min": 1
         },
         "predicates": {
-          "minecraft:custom_data": {"awesome_stick": true}
+          "minecraft:custom_data": "{awesome_stick: true}"
         }
       }
     }
@@ -209,7 +220,7 @@ The items NBT is stored inside the `Item` NBT tag, so we can test for an item th
     @e[type=item,nbt={Item:{id:"minecraft:stick",tag:{display:{Name:'{"text":"Awesome Stick"}'}}}}]
     @e[type=item,nbt={Item:{id:"minecraft:stick",tag:{awesome_stick:true}}}]
 
-### Use predicate
+### Predicate
 
 When using a datapack, you can check items in equipment slots. To do this, create a file `data/<namespace>/predicates/<predicate_name>.json` in your datapack. For example, the predicate `data/example/predicates/has/awesome_stick.json` would have the resourcename `example:has/awesome_stick`. And you can check the predicate in any target selector, `execute if predicate <predicate>`, as well as in loot and advancements tables.
 Here is an example of a predicate and its use in a target selector:
