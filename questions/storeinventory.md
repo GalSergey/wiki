@@ -79,21 +79,23 @@ Since version 1.20.2, [macro](https://minecraft.wiki/w/Function_(Java_Edition)#M
 Below is an example of storing a player's inventory in storage using the [scoreboard ID system](/wiki/questions/linkentity), or you can store the UUID / nickname instead of using the scoreboard ID system. To do this you need to run the function `example:storing` as a player.
 
     # function example:storing
-    data remove storage example:inv this
-    execute store result storage example:inv this.ID int 1 run scoreboard players get @s ID
-    data modify storage example:inv this.Inventory set from entity @s Inventory
-    function example:storing/update with storage example:inventory this
+    data remove storage example:macro this
+    execute store result storage example:macro this.ID int 1 run scoreboard players get @s ID
+    data modify storage example:macro this.Inventory set from entity @s Inventory
+    function example:storing/update with storage example:macro this
     
     # function example:storing/update
-    $execute unless data storage example:inv players[{ID:$(ID)}] run data modify storage example:inv players append {ID:$(ID)}
-    $data modify storage example:inv players[{ID:$(ID)}] merge from storage example:inv this
+    $execute unless data storage example:database players[{ID:$(ID)}] run data modify storage example:database players append {ID:$(ID)}
+    $data modify storage example:database players[{ID:$(ID)}] merge from storage example:macro this
 
-This player data storage system will create an in storage `example:inv` object for each player in the `players` list that will look something like:
+This player data storage system will create an in storage `example:database` object for each player in the `players` list that will look something like:
 
-    # storage example:inv players[{ID:5}]
+    # storage example:database players[{ID:5}]
     {ID:5,Inventory:[{Slot:0b,id:"minecraft:stick",Count:1b}]}
 
 However, this implementation can support any data other than player `ID` and `Inventory` and you can easily add saving any other data.
+
+You can now return inventory using [this method](#putting-things-in-the-original-slot-from-storage).
 
 #### In marker entity
 
@@ -142,30 +144,29 @@ Below is an example for versions 1.20.2 - 1.20.4. To do this need to run functio
     
     # function example:returning
     ## Read player Scoreboard ID
-    execute store result storage example:inv this.ID int 1 run scoreboard players get @s ID 
+    execute store result storage example:macro this.ID int 1 run scoreboard players get @s ID 
     ## Reading the selected player's data from the entire array of data of all players.
-    function example:returning/read with storage example:inv this
+    function example:returning/read with storage example:macro this
     ## Create an empty tag if there is no tag data in the current slot.
-    execute unless data storage example:inv this.Inventory[-1].tag run data modify storage example:inv this.Inventory[-1].tag set value "" 
+    execute unless data storage example:macro this.Inventory[-1].tag run data modify storage example:macro this.Inventory[-1].tag set value "" 
     ## Running the function of returning items from the end of the list.
-    function example:returning/item with storage example:inv this.Inventory[-1]
+    function example:returning/item with storage example:macro this.Inventory[-1]
     
     # function example:returning/read
-    $data modify storage example:inv this set from storage example:inv players[{ID:$(ID)}]
+    $data modify storage example:macro this set from storage example:database players[{ID:$(ID)}]
     
     # function example:returning/item
     ## Set the current slot to select slot processing
     $scoreboard players set #this Slot $(Slot)
-    execute if score #this Slot matches 0..35 run function example:returning/inventory with storage example:inv this.Inventory[-1]
-    execute unless score #this Slot matches 0..35 run function example:returning/equipment with storage example:inv this.Inventory[-1]
+    execute if score #this Slot matches 0..35 run function example:returning/inventory with storage example:macro this.Inventory[-1]
+    execute unless score #this Slot matches 0..35 run function example:returning/equipment with storage example:macro this.Inventory[-1]
     ## After returning the current item, remove this slot from storage and start returning the next item
-    data remove storage example:inv this.Inventory[-1]
-    execute unless data storage example:inv this.Inventory[-1].tag run data modify storage example:inv this.Inventory[-1].tag set value "" 
-    function example:returning/item with storage example:inv this.Inventory[-1]
+    data remove storage example:macro this.Inventory[-1]
+    execute unless data storage example:macro this.Inventory[-1].tag run data modify storage example:macro this.Inventory[-1].tag set value "" 
+    function example:returning/item with storage example:macro this.Inventory[-1]
     
     # function example:returning/inventory
     ## For inventory slots, can directly insert Slot into the /item command
-    function example:returning/equipment with storage example:inv this.Inventory[-1]
     $item replace entity @s container.$(Slot) $(id)$(tag) $(Count)
     
     # function example:returning/equipment
@@ -212,23 +213,23 @@ Below is an updated example for version 1.20.5 without comments, since otherwise
     scoreboard objectives add Slot dummy
     
     # function example:returning
-    execute store result storage example:inv this.ID int 1 run scoreboard players get @s ID
-    function example:returning/read with storage example:inv this
-    execute unless data storage example:inv this.Inventory[-1].components run data modify storage example:inv this.Inventory[-1].components set value {}
-    function example:returning/item with storage example:inv this.Inventory[-1]
+    execute store result storage example:macro this.ID int 1 run scoreboard players get @s ID
+    function example:returning/read with storage example:macro this
+    execute unless data storage example:macro this.Inventory[-1].components run data modify storage example:macro this.Inventory[-1].components set value {}
+    function example:returning/item with storage example:macro this.Inventory[-1]
     
     # function example:returning/read
-    $data modify storage example:inv this set from storage example:inv players[{ID:$(ID)}]
+    $data modify storage example:macro this set from storage example:database players[{ID:$(ID)}]
     
     # function example:returning/item
     $scoreboard players set #this Slot $(Slot)
-    execute if score #this Slot matches 0..35 run function example:returning/inventory with storage example:inv this.Inventory[-1]
-    execute unless score #this Slot matches 0..35 run function example:returning/equipment with storage example:inv this.Inventory[-1]
-    data remove storage example:inv this.Inventory[-1]
-    execute unless data storage example:inv this.Inventory[-1].components run data modify storage example:inv this.Inventory[-1].components set value {} 
-    function example:returning/item with storage example:inv this.Inventory[-1]
+    execute if score #this Slot matches 0..35 run function example:returning/inventory with storage example:macro this.Inventory[-1]
+    execute unless score #this Slot matches 0..35 run function example:returning/equipment with storage example:macro this.Inventory[-1]
+    data remove storage example:macro this.Inventory[-1]
+    execute unless data storage example:macro this.Inventory[-1].components run data modify storage example:macro this.Inventory[-1].components set value {} 
+    function example:returning/item with storage example:macro this.Inventory[-1]
     
-    # function example:returning/inventory with storage example:inv this.Inventory[-1]
+    # function example:returning/inventory
     $loot replace entity @s container.$(Slot) loot {pools:[{rolls:1,entries:[{type:"minecraft:item",name:"$(id)",functions:[{function:"minecraft:set_count",count:$(count)},{function:"minecraft:set_components",components:$(components)}]}]}]}
     
     # function example:returning/equipment
