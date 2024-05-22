@@ -153,3 +153,23 @@ For example, the crafting recipe below (1.20.5+), which will give an item with t
   }
 }
 ```
+
+But as of version 1.21, you can specify the data for a `custom_data` component as a string in the `set_custom_data` function or crafting `result` to avoid the implicit conversion:
+
+```
+# 1.21 and above
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:stick"
+    }
+  ],
+  "result": {
+    "id": "minecraft:stick",
+    "components": {
+      "minecraft:custom_data": "{my_custom_stick:1}"
+    }
+  }
+}
+```
